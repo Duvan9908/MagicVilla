@@ -10,10 +10,11 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace MagicVilla_API.Controllers
+namespace MagicVilla_API.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class NumeroVillaController : ControllerBase
     {
         private readonly ILogger<NumeroVillaController> _logger;
@@ -21,7 +22,7 @@ namespace MagicVilla_API.Controllers
         private readonly INumeroVillaRepositorio _numeroRepo;
         private readonly IMapper _mapper;
         protected APIResponse _response;
-        public NumeroVillaController(ILogger<NumeroVillaController> logger, IVillaRepositorio villaRepo, 
+        public NumeroVillaController(ILogger<NumeroVillaController> logger, IVillaRepositorio villaRepo,
                                     INumeroVillaRepositorio numeroRepo, IMapper mapper)
         {
             _logger = logger;
@@ -40,7 +41,7 @@ namespace MagicVilla_API.Controllers
             {
                 _logger.LogInformation("Obtener número de las Villas");
 
-                IEnumerable<NumeroVilla> numeroVillaList = await _numeroRepo.ObtenerTodos(incluirPropiedades:"Villa");
+                IEnumerable<NumeroVilla> numeroVillaList = await _numeroRepo.ObtenerTodos(incluirPropiedades: "Villa");
 
                 _response.Resultado = _mapper.Map<IEnumerable<NumeroVillaDto>>(numeroVillaList);
                 _response.statusCode = HttpStatusCode.OK;
@@ -56,6 +57,7 @@ namespace MagicVilla_API.Controllers
             return _response;
         }
 
+        
 
         [HttpGet("{id:int}", Name = "GetNumeroVilla")]
         [Authorize(Roles = "admin")]
@@ -92,7 +94,7 @@ namespace MagicVilla_API.Controllers
                 _response.IsExitoso = false;
                 _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
-            return _response;            
+            return _response;
         }
 
         [HttpPost]
@@ -186,21 +188,21 @@ namespace MagicVilla_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdatNumeroVilla(int id, [FromBody] NumeroVillaUpdateDto updateDto)
         {
-            if(updateDto == null || id != updateDto.VillaNo)
+            if (updateDto == null || id != updateDto.VillaNo)
             {
                 _response.IsExitoso = false;
                 _response.statusCode = HttpStatusCode.BadRequest;
                 return BadRequest(_response);
             }
 
-            if(await _villaRepo.Obtener(v => v.Id == updateDto.VillaId) == null)
+            if (await _villaRepo.Obtener(v => v.Id == updateDto.VillaId) == null)
             {
                 ModelState.AddModelError("ErrorMessages", "El Id de la Villa no existe!");
                 return BadRequest(ModelState);
             }
 
             NumeroVilla model = _mapper.Map<NumeroVilla>(updateDto);
-            
+
             await _numeroRepo.Actualizar(model);
             _response.statusCode = HttpStatusCode.NoContent;
 

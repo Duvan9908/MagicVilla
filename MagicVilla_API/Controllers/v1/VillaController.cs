@@ -10,10 +10,11 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace MagicVilla_API.Controllers
+namespace MagicVilla_API.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class VillaController : ControllerBase
     {
         private readonly ILogger<VillaController> _logger;
@@ -89,7 +90,7 @@ namespace MagicVilla_API.Controllers
                 _response.IsExitoso = false;
                 _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
-            return _response;            
+            return _response;
         }
 
         [HttpPost]
@@ -178,7 +179,7 @@ namespace MagicVilla_API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateVilla(int id, [FromBody] VillaUpdateDto updateDto)
         {
-            if(updateDto == null || id != updateDto.Id)
+            if (updateDto == null || id != updateDto.Id)
             {
                 _response.IsExitoso = false;
                 _response.statusCode = HttpStatusCode.BadRequest;
@@ -186,7 +187,7 @@ namespace MagicVilla_API.Controllers
             }
 
             Villa model = _mapper.Map<Villa>(updateDto);
-            
+
             await _villaRepo.Actualizar(model);
             _response.statusCode = HttpStatusCode.NoContent;
 
@@ -204,21 +205,21 @@ namespace MagicVilla_API.Controllers
                 return BadRequest();
             }
             //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
-            var villa = await _villaRepo.Obtener(x => x.Id == id, tracked:false);
+            var villa = await _villaRepo.Obtener(x => x.Id == id, tracked: false);
 
-            VillaUpdateDto villaDto = _mapper.Map<VillaUpdateDto>(villa);            
+            VillaUpdateDto villaDto = _mapper.Map<VillaUpdateDto>(villa);
 
-            if(villa == null) return BadRequest();
+            if (villa == null) return BadRequest();
 
             patchDto.ApplyTo(villaDto, ModelState);
 
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
             Villa modelo = _mapper.Map<Villa>(villaDto);
-            
+
             await _villaRepo.Actualizar(modelo);
             _response.statusCode = HttpStatusCode.NoContent;
 
